@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cosmos Explorer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── RESET & VARIABLES ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #03040a;
+      --surface: #0d0f1e;
+      --accent: #e8ff47;
+      --accent2: #7b5cff;
+      --text: #e4e6f1;
+      --muted: #5a5d7a;
+      --card-bg: #10122a;
+      --border: rgba(255,255,255,0.07);
+      --glow: 0 0 40px rgba(123,92,255,0.35);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── STARFIELD BACKGROUND ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.8) 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 55% 15%, rgba(255,255,255,0.9) 0%, transparent 100%),
+        radial-gradient(1px 1px at 75% 45%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 20% 85%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 65% 70%, rgba(255,255,255,0.8) 0%, transparent 100%),
+        radial-gradient(1px 1px at 42% 38%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 85% 12%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(2px 2px at 50% 50%, rgba(123,92,255,0.4) 0%, transparent 100%),
+        radial-gradient(2px 2px at 15% 40%, rgba(232,255,71,0.3) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 4rem;
+      background: rgba(3,4,10,0.8);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .logo span { color: var(--accent2); }
+
+    nav ul {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 0.05em;
+      transition: color 0.2s;
+    }
+
+    nav a:hover { color: var(--accent); }
+
+    .nav-cta {
+      background: var(--accent);
+      color: var(--bg) !important;
+      padding: 0.5rem 1.2rem;
+      border-radius: 2px;
+      font-weight: 700;
+    }
+
+    .nav-cta:hover { background: #fff !important; color: var(--bg) !important; }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 4rem;
+      padding: 8rem 4rem 6rem;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .hero-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent2);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .hero-label::before {
+      content: '';
+      display: inline-block;
+      width: 30px;
+      height: 1px;
+      background: var(--accent2);
+    }
+
+    h1 {
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      font-weight: 800;
+      line-height: 1.0;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--accent);
+      position: relative;
+    }
+
+    .hero-desc {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.9rem;
+      line-height: 1.8;
+      color: var(--muted);
+      max-width: 480px;
+      margin-bottom: 2.5rem;
+    }
+
+    .btn-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-block;
+      padding: 0.85rem 2rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      border-radius: 2px;
+      transition: all 0.25s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: 700;
+    }
+
+    .btn-primary:hover {
+      background: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(232,255,71,0.3);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent2);
+      color: var(--accent2);
+    }
+
+    /* ── PLANET VISUAL ── */
+    .hero-visual {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .planet-wrap {
+      position: relative;
+      width: 380px;
+      height: 380px;
+    }
+
+    .planet {
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%,
+        #5c3bff 0%,
+        #3b1fa8 40%,
+        #1a0a5c 70%,
+        #06020f 100%);
+      box-shadow:
+        inset -30px -20px 60px rgba(0,0,0,0.7),
+        0 0 80px rgba(91,59,255,0.4),
+        0 0 160px rgba(91,59,255,0.15);
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .ring {
+      width: 380px;
+      height: 90px;
+      border: 8px solid transparent;
+      border-top: 8px solid rgba(123,92,255,0.5);
+      border-bottom: 8px solid rgba(123,92,255,0.2);
+      border-radius: 50%;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) rotateX(72deg);
+      animation: float 6s ease-in-out infinite;
+      animation-delay: 0.1s;
+    }
+
+    .orbit {
+      width: 340px;
+      height: 340px;
+      border: 1px dashed rgba(255,255,255,0.1);
+      border-radius: 50%;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation: spin 12s linear infinite;
+    }
+
+    .moon {
+      width: 18px;
+      height: 18px;
+      background: radial-gradient(circle at 40% 40%, #cdd0e0, #5a5d7a);
+      border-radius: 50%;
+      position: absolute;
+      top: -9px; left: 50%;
+      margin-left: -9px;
+      box-shadow: 0 0 12px rgba(255,255,255,0.3);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+      50% { transform: translate(-50%, -50%) translateY(-16px); }
+    }
+
+    @keyframes spin { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      position: relative; z-index: 1;
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      max-width: 900px;
+      margin: 0 auto 6rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .stat {
+      flex: 1;
+      padding: 1.8rem 2rem;
+      text-align: center;
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      transition: background 0.25s;
+    }
+
+    .stat:last-child { border-right: none; }
+    .stat:hover { background: var(--card-bg); }
+
+    .stat-num {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--accent);
+      display: block;
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+
+    .stat-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    /* ── SECTION ── */
+    section {
+      position: relative; z-index: 1;
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 4rem 4rem;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .section-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent2);
+      opacity: 0.7;
+    }
+
+    h2 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    /* ── CARDS ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2rem;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s;
+    }
+
+    .card:hover {
+      border-color: rgba(123,92,255,0.4);
+      transform: translateY(-4px);
+      box-shadow: var(--glow);
+    }
+
+    .card:hover::before { transform: scaleX(1); }
+
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1.2rem;
+      display: block;
+    }
+
+    .card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.7rem;
+      letter-spacing: -0.01em;
+    }
+
+    .card p {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      line-height: 1.8;
+      color: var(--muted);
+    }
+
+    /* ── TIMELINE ── */
+    .timeline {
+      position: relative;
+      padding-left: 3rem;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 1px;
+      background: linear-gradient(to bottom, var(--accent2), transparent);
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 3rem;
+      padding-bottom: 3rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .timeline-item:last-child { border-bottom: none; margin-bottom: 0; }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -3rem;
+      top: 0.4rem;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent2);
+      box-shadow: 0 0 12px var(--accent2);
+    }
+
+    .timeline-date {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .timeline-item h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .timeline-item p {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.8;
+      max-width: 600px;
+    }
+
+    /* ── QUOTE ── */
+    .quote-block {
+      background: linear-gradient(135deg, var(--surface), var(--card-bg));
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      padding: 3rem 4rem;
+      margin: 4rem 0;
+      border-radius: 4px;
+    }
+
+    blockquote {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1.4;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.5rem;
+    }
+
+    blockquote em { color: var(--accent); font-style: normal; }
+
+    cite {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-style: normal;
+    }
+
+    /* ── NEWSLETTER ── */
+    .newsletter {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4rem;
+      text-align: center;
+      margin: 4rem 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .newsletter::after {
+      content: '✦';
+      position: absolute;
+      font-size: 20rem;
+      color: rgba(123,92,255,0.03);
+      right: -2rem; top: -4rem;
+      pointer-events: none;
+    }
+
+    .newsletter h2 { margin-bottom: 0.8rem; }
+
+    .newsletter p {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 0.8rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .form-row input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.85rem 1.2rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.85rem;
+      border-radius: 2px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-row input:focus { border-color: var(--accent2); }
+    .form-row input::placeholder { color: var(--muted); }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 3rem 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    footer p {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    footer a {
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    footer a:hover { color: var(--accent); }
+
+    .footer-links { display: flex; gap: 2rem; }
+
+    /* ── ANIMATIONS on load ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-content > * {
+      animation: fadeUp 0.7s ease both;
+    }
+
+    .hero-content > *:nth-child(1) { animation-delay: 0.1s; }
+    .hero-content > *:nth-child(2) { animation-delay: 0.2s; }
+    .hero-content > *:nth-child(3) { animation-delay: 0.35s; }
+    .hero-content > *:nth-child(4) { animation-delay: 0.5s; }
+
+    .hero-visual { animation: fadeUp 0.9s 0.3s ease both; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 1rem 1.5rem; }
+      nav ul { display: none; }
+      .hero { grid-template-columns: 1fr; padding: 5rem 1.5rem 3rem; }
+      .planet-wrap { width: 280px; height: 280px; }
+      .planet { width: 190px; height: 190px; }
+      .ring { width: 280px; height: 68px; }
+      .orbit { width: 250px; height: 250px; }
+      .card-grid { grid-template-columns: 1fr; }
+      section { padding: 3rem 1.5rem; }
+      .stats-bar { flex-direction: column; margin: 0 1.5rem 4rem; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); }
+      .stat:last-child { border-bottom: none; }
+      .newsletter, .quote-block { padding: 2rem 1.5rem; }
+      .form-row { flex-direction: column; }
+      footer { flex-direction: column; gap: 1.5rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo">Cosmos<span>X</span></div>
+    <ul>
+      <li><a href="#discover">Entdecken</a></li>
+      <li><a href="#missions">Missionen</a></li>
+      <li><a href="#about">Über uns</a></li>
+      <li><a href="#contact" class="nav-cta">Mitmachen</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-content">
+      <p class="hero-label">Weltraumforschung · 2025</p>
+      <h1>Das <em>Universum</em> wartet auf dich.</h1>
+      <p class="hero-desc">CosmosX ist deine Plattform für faszinierende Einblicke in Astronomie, Raumfahrt und die großen Fragen des Universums. Wir machen Wissenschaft erlebbar.</p>
+      <div class="btn-group">
+        <a href="#discover" class="btn btn-primary">Jetzt entdecken</a>
+        <a href="#missions" class="btn btn-secondary">Unsere Missionen</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="planet-wrap">
+        <div class="orbit"><div class="moon"></div></div>
+        <div class="ring"></div>
+        <div class="planet"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat">
+      <span class="stat-num">93M</span>
+      <span class="stat-label">km zur Sonne</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">8</span>
+      <span class="stat-label">Planeten</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">2 Bio</span>
+      <span class="stat-label">Galaxien</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">13,8B</span>
+      <span class="stat-label">Jahre alt</span>
+    </div>
+  </div>
+
+  <!-- ENTDECKEN -->
+  <section id="discover">
+    <div class="section-header">
+      <span class="section-num">01 —</span>
+      <h2>Themen entdecken</h2>
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        <span class="card-icon">🌌</span>
+        <h3>Schwarze Löcher</h3>
+        <p>Objekte mit einer so starken Gravitation, dass selbst Licht nicht entkommen kann. Ihr Ereignishorizont markiert den point of no return.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🚀</span>
+        <h3>Raumfahrt</h3>
+        <p>Von den ersten Mondlandungen bis hin zu privaten Missionen zum Mars — die Menschheit hat den Weltraum immer weiter erschlossen.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🔭</span>
+        <h3>Exoplaneten</h3>
+        <p>Über 5.500 bestätigte Planeten außerhalb unseres Sonnensystems. Einige befinden sich in der habitablen Zone ihrer Sterne.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🌟</span>
+        <h3>Stellare Entwicklung</h3>
+        <p>Sterne entstehen, leben Millionen von Jahren und enden als Weiße Zwerge, Neutronensterne oder spektakuläre Supernovae.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🪐</span>
+        <h3>Unser Sonnensystem</h3>
+        <p>Acht Planeten, Zwergplaneten, Monden, Asteroiden und Kometen — unser kosmischer Hinterhof steckt voller Geheimnisse.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🌊</span>
+        <h3>Dunkle Materie</h3>
+        <p>Sie macht ~27 % des Universums aus, ist aber unsichtbar. Die größte offene Frage der modernen Kosmologie.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUOTE -->
+  <section>
+    <div class="quote-block">
+      <blockquote>„Das Universum ist <em>überall</em> — und es wartet darauf, von neugierigen Geistern erforscht zu werden."</blockquote>
+      <cite>— Carl Sagan, Astrophysiker &amp; Autor</cite>
+    </div>
+  </section>
+
+  <!-- MISSIONEN TIMELINE -->
+  <section id="missions">
+    <div class="section-header">
+      <span class="section-num">02 —</span>
+      <h2>Meilensteine</h2>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <p class="timeline-date">20. Juli 1969</p>
+        <h3>Apollo 11 — Erste Mondlandung</h3>
+        <p>Neil Armstrong und Buzz Aldrin setzen als erste Menschen den Fuß auf den Mond. Ein Moment, der die Geschichte der Menschheit für immer veränderte.</p>
+      </div>
+      <div class="timeline-item">
+        <p class="timeline-date">1990 — Heute</p>
+        <h3>Hubble Space Telescope</h3>
+        <p>Seit über 30 Jahren liefert das Hubble-Weltraumteleskop atemberaubende Bilder des Kosmos und revolutionierte unser Verständnis des Universums.</p>
+      </div>
+      <div class="timeline-item">
+        <p class="timeline-date">25. Dez. 2021</p>
+        <h3>James Webb Telescope — Start</h3>
+        <p>Das leistungsstärkste je gebaute Weltraumteleskop ermöglicht Einblicke in die ersten Galaxien nach dem Urknall — bis zu 13,6 Milliarden Lichtjahre entfernt.</p>
+      </div>
+      <div class="timeline-item">
+        <p class="timeline-date">Geplant: 2030er</p>
+        <h3>Menschen zum Mars</h3>
+        <p>SpaceX, NASA und ESA arbeiten an Missionen, die erstmals Menschen zum Roten Planeten bringen sollen. Ein neues Kapitel der Raumfahrt beginnt.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEWSLETTER -->
+  <section id="contact">
+    <div class="newsletter">
+      <h2>Bleib auf dem Laufenden</h2>
+      <p>Astronomie-News, Missionsberichte und Forschungs-Updates direkt in dein Postfach.</p>
+      <div class="form-row">
+        <input type="email" placeholder="deine@email.de" />
+        <button class="btn btn-primary">Abonnieren</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2025 CosmosX — Test-Website · Erstellt mit ♥ für das Universum</p>
+    <div class="footer-links">
+      <a href="#">Impressum</a>
+      <a href="#">Datenschutz</a>
+      <a href="#">Kontakt</a>
+    </div>
+  </footer>
+
+</body>
+</html>
